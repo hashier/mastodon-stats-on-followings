@@ -3,6 +3,7 @@ from mastodon import Mastodon
 import datetime
 
 INSTANCE_URL = "https://chaos.social"  # Change to your instance
+
 LIMIT = 120
 LAST_N_DAYS = 14
 
@@ -74,6 +75,9 @@ def print_stats(sorted_post_counts):
 
 if __name__ == "__main__":
     VERBOSE = True
+
+    if not os.getenv("MASTODON_ACCESS_TOKEN"):
+        sys.exit("Please export the env var 'MASTODON_ACCESS_TOKEN'")
 
     if len(sys.argv) == 1:
         followings = fetch_all_following()
