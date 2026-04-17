@@ -1,4 +1,5 @@
-import sys, os
+import sys
+import os
 from mastodon import Mastodon
 import datetime
 
@@ -9,10 +10,7 @@ LAST_N_DAYS = 14
 
 VERBOSE = False
 
-MASTODON_ACCESS_TOKEN = os.getenv("MASTODON_ACCESS_TOKEN")
-
-
-mastodon = Mastodon(access_token=MASTODON_ACCESS_TOKEN, api_base_url=INSTANCE_URL)
+mastodon: Mastodon
 
 
 def fetch_rest(page):
@@ -78,6 +76,11 @@ if __name__ == "__main__":
 
     if not os.getenv("MASTODON_ACCESS_TOKEN"):
         sys.exit("Please export the env var 'MASTODON_ACCESS_TOKEN'")
+
+    mastodon = Mastodon(
+        access_token=os.getenv("MASTODON_ACCESS_TOKEN"),
+        api_base_url=INSTANCE_URL,
+    )
 
     if len(sys.argv) == 1:
         followings = fetch_all_following()
