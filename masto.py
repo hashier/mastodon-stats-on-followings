@@ -36,22 +36,30 @@ def fetch_statuses(account_id, limit=40):
     return fetch_pages(first_page, limit=LIMIT)
 
 
+def categorize_statuses(statuses, account_id):
+    threshold = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(
+        days=LAST_N_DAYS
+    )
+    posts, threads, boosts = 0, 0, 0
+    for s in statuses:
+        if s["created_at"] <= threshold:
+            continue
+        if s["reblog"]:
+            boosts += 1
+        elif s["in_reply_to_id"] and s["in_reply_to_account_id"] == account_id:
+            threads += 1
+        elif not s["in_reply_to_id"]:
+            posts += 1
+    return posts, threads, boosts
+
+
 def create_stats_of_followings(followings):
-    post_counts = {}
+    stats = {}
 
     for i, follow in enumerate(followings):
         account_id = follow["id"]
         statuses = fetch_statuses(account_id, limit=LIMIT)
-
-        threshold = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(
-            days=LAST_N_DAYS
-        )
-        recent_posts = [
-            s
-            for s in statuses
-            if s["created_at"] > threshold and not s["in_reply_to_id"]
-        ]
-        post_counts[follow["username"]] = len(recent_posts)
+        stats[follow["username"]] = categorize_statuses(statuses, account_id)
 
         if VERBOSE:
             print(
@@ -61,21 +69,27 @@ def create_stats_of_followings(followings):
                 f"Reset: {datetime.datetime.fromtimestamp(mastodon.ratelimit_reset, tz=datetime.timezone.utc).astimezone()}",
             )
 
-    sorted_post_counts = sorted(post_counts.items(), key=lambda x: x[1], reverse=True)
-
-    return sorted_post_counts
+    return sorted(stats.items(), key=lambda x: sum(x[1]), reverse=True)
 
 
-def print_stats(sorted_post_counts):
-    print(f"Posts that were not replies of the last {LAST_N_DAYS} days:")
-    if not sorted_post_counts:
+def print_stats(sorted_stats):
+    print(f"Timeline noise for the last {LAST_N_DAYS} days (sorted by total):\n")
+    if not sorted_stats:
         return
-    max_name = max(len(name) for name, _ in sorted_post_counts)
-    max_count = max(len(str(count)) for _, count in sorted_post_counts)
-    for username, count in sorted_post_counts:
+    max_name = max(len(name) for name, _ in sorted_stats)
+    totals = [sum(counts) for _, counts in sorted_stats]
+    max_total = len(str(max(totals)))
+    for username, (posts, threads, boosts) in sorted_stats:
+        total = posts + threads + boosts
         left = f"  {username} "
-        right = f" {count:>{max_count}} posts   {count / LAST_N_DAYS:.3f}/day"
         dots = "." * max(3, max_name - len(username) + 3)
+        right = (
+            f" {posts:>3} posts"
+            f"  {threads:>3} threads"
+            f"  {boosts:>3} boosts"
+            f"  {total:>{max_total}} total"
+            f"  {total / LAST_N_DAYS:.1f}/day"
+        )
         print(f"{left}{dots}{right}")
 
 
