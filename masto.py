@@ -62,11 +62,15 @@ def create_stats_of_followings(followings):
         stats[follow["username"]] = categorize_statuses(statuses, account_id)
 
         if VERBOSE:
+            remaining = int(mastodon.ratelimit_remaining)
+            limit = int(mastodon.ratelimit_limit)
+            reset = datetime.datetime.fromtimestamp(
+                mastodon.ratelimit_reset, tz=datetime.timezone.utc
+            ).astimezone()
             print(
-                f"Done: {i + 1:3}/{len(followings)}",
-                f"Limit: {mastodon.ratelimit_remaining:3} / {mastodon.ratelimit_limit}",
-                f"Lastcall: {datetime.datetime.fromtimestamp(mastodon.ratelimit_lastcall, tz=datetime.timezone.utc).astimezone()}",
-                f"Reset: {datetime.datetime.fromtimestamp(mastodon.ratelimit_reset, tz=datetime.timezone.utc).astimezone()}",
+                f"  {i + 1:3}/{len(followings)}"
+                f"  [API rate limit: {remaining}/{limit},"
+                f" resets at {reset:%H:%M:%S}]"
             )
 
     return sorted(stats.items(), key=lambda x: sum(x[1]), reverse=True)
