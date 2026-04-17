@@ -2,7 +2,7 @@
 
 Find out which of the people you follow on Mastodon are the most chatty.
 
-Shows post counts (excluding replies) for the last 14 days, sorted by activity.
+Shows timeline noise (posts, self-threads, and boosts) for the last 14 days, sorted by total activity. Helps you find accounts that flood your timeline so you can curate who you follow.
 
 ## Setup
 
@@ -31,15 +31,14 @@ python masto.py user@instance.social
 ## Example output
 
 ```
-Posts that were not replies of the last 14 days:
-alice: 42 posts. Average 3.000 a day.
-bob: 17 posts. Average 1.214 a day.
-carol: 3 posts. Average 0.214 a day.
+Timeline noise for the last 14 days (sorted by total):
+
+  alice ..   21 posts    5 threads   12 boosts  38 total  2.7/day
+  bob ....    3 posts    0 threads   30 boosts  33 total  2.4/day
+  carol ..   18 posts    3 threads    0 boosts  21 total  1.5/day
 ```
 
 ## Configuration
-
-These constants at the top of `masto.py` can be adjusted:
 
 Set these in `.env`:
 
