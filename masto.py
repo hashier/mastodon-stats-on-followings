@@ -1,9 +1,12 @@
 import sys
 import os
+from dotenv import load_dotenv
 from mastodon import Mastodon
 import datetime
 
-INSTANCE_URL = "https://chaos.social"  # Change to your instance
+load_dotenv()
+
+INSTANCE_URL = os.getenv("MASTODON_INSTANCE_URL", "https://chaos.social")
 
 LIMIT = 120
 LAST_N_DAYS = 14
