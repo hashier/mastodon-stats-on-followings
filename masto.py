@@ -56,8 +56,8 @@ def create_stats_of_followings(followings):
             print(
                 f"Done: {i+1:3}/{len(followings)}",
                 f"Limit: {mastodon.ratelimit_remaining:3} / {mastodon.ratelimit_limit}",
-                f"Lastcall: {datetime.datetime.fromtimestamp(mastodon.ratelimit_lastcall)}",
-                f"Rest: {datetime.datetime.fromtimestamp(mastodon.ratelimit_reset)}"
+                f"Lastcall: {datetime.datetime.fromtimestamp(mastodon.ratelimit_lastcall, tz=datetime.timezone.utc).astimezone()}",
+                f"Reset: {datetime.datetime.fromtimestamp(mastodon.ratelimit_reset, tz=datetime.timezone.utc).astimezone()}"
             )
 
     sorted_post_counts = sorted(post_counts.items(), key=lambda x: x[1], reverse=True)
@@ -68,7 +68,7 @@ def create_stats_of_followings(followings):
 def print_stats(sorted_post_counts):
     print(f"Posts that were not replies of the last {LAST_N_DAYS} days:")
     for username, count in sorted_post_counts:
-        print(f"{username}: {count} posts. Average {count/LAST_N_DAYS:.3} a day.")
+        print(f"{username}: {count} posts. Average {count/LAST_N_DAYS:.3f} a day.")
 
 
 if __name__ == "__main__":
