@@ -17,11 +17,12 @@ mastodon: Mastodon
 
 
 def fetch_pages(page, limit=None):
-    data = list(page)
-    while page := mastodon.fetch_next(page):
+    data = []
+    while page:
         data.extend(page)
         if limit and len(data) >= limit:
             break
+        page = mastodon.fetch_next(page)
     return data
 
 
@@ -67,8 +68,15 @@ def create_stats_of_followings(followings):
 
 def print_stats(sorted_post_counts):
     print(f"Posts that were not replies of the last {LAST_N_DAYS} days:")
+    if not sorted_post_counts:
+        return
+    max_name = max(len(name) for name, _ in sorted_post_counts)
+    max_count = max(len(str(count)) for _, count in sorted_post_counts)
     for username, count in sorted_post_counts:
-        print(f"{username}: {count} posts. Average {count / LAST_N_DAYS:.3f} a day.")
+        left = f"  {username} "
+        right = f" {count:>{max_count}} posts   {count / LAST_N_DAYS:.3f}/day"
+        dots = "." * max(3, max_name - len(username) + 3)
+        print(f"{left}{dots}{right}")
 
 
 if __name__ == "__main__":
