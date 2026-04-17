@@ -39,16 +39,22 @@ def create_stats_of_followings(followings):
         account_id = follow["id"]
         statuses = fetch_statuses(account_id, limit=LIMIT)
 
-        threshold = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=LAST_N_DAYS)
-        recent_posts = [s for s in statuses if s["created_at"] > threshold and not s["in_reply_to_id"]]
+        threshold = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(
+            days=LAST_N_DAYS
+        )
+        recent_posts = [
+            s
+            for s in statuses
+            if s["created_at"] > threshold and not s["in_reply_to_id"]
+        ]
         post_counts[follow["username"]] = len(recent_posts)
 
         if VERBOSE:
             print(
-                f"Done: {i+1:3}/{len(followings)}",
+                f"Done: {i + 1:3}/{len(followings)}",
                 f"Limit: {mastodon.ratelimit_remaining:3} / {mastodon.ratelimit_limit}",
                 f"Lastcall: {datetime.datetime.fromtimestamp(mastodon.ratelimit_lastcall, tz=datetime.timezone.utc).astimezone()}",
-                f"Reset: {datetime.datetime.fromtimestamp(mastodon.ratelimit_reset, tz=datetime.timezone.utc).astimezone()}"
+                f"Reset: {datetime.datetime.fromtimestamp(mastodon.ratelimit_reset, tz=datetime.timezone.utc).astimezone()}",
             )
 
     sorted_post_counts = sorted(post_counts.items(), key=lambda x: x[1], reverse=True)
@@ -59,7 +65,7 @@ def create_stats_of_followings(followings):
 def print_stats(sorted_post_counts):
     print(f"Posts that were not replies of the last {LAST_N_DAYS} days:")
     for username, count in sorted_post_counts:
-        print(f"{username}: {count} posts. Average {count/LAST_N_DAYS:.3f} a day.")
+        print(f"{username}: {count} posts. Average {count / LAST_N_DAYS:.3f} a day.")
 
 
 if __name__ == "__main__":
@@ -80,6 +86,8 @@ if __name__ == "__main__":
         account = mastodon.account_lookup(sys.argv[1])
         stats = create_stats_of_followings([account])
     else:
-        sys.exit(f"Usage: {sys.argv[0]} without argument prints stats about all the people you follow. The 1st argument can be an account (user@server) and it will print out posting stats for that account")
+        sys.exit(
+            f"Usage: {sys.argv[0]} without argument prints stats about all the people you follow. The 1st argument can be an account (user@server) and it will print out posting stats for that account"
+        )
 
     print_stats(stats)
