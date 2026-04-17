@@ -52,7 +52,7 @@ These constants in `masto.py` can also be adjusted:
 
 | Constant | Default | Description |
 |---|---|---|
-| `LIMIT` | `120` | Max statuses fetched per account |
+| `LIMIT` | `120` | Max statuses fetched per account. If someone posted more than this in the time window, their count will be undercounted. |
 | `LAST_N_DAYS` | `14` | Time window for counting posts |
 
 ## Rate limits
