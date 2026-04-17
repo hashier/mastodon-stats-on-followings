@@ -13,32 +13,23 @@ VERBOSE = False
 mastodon: Mastodon
 
 
-def fetch_rest(page):
-    data = []
-    while page:
+def fetch_pages(page, limit=None):
+    data = list(page)
+    while page := mastodon.fetch_next(page):
         data.extend(page)
-        page = mastodon.fetch_next(page)
-    return data
-
-
-def fetch_some_more(page):
-    data = page
-    while page and len(data) < LIMIT:
-        page = mastodon.fetch_next(page)
-        if not page:
+        if limit and len(data) >= limit:
             break
-        data.extend(page)
     return data
 
 
 def fetch_all_following():
     first_page = mastodon.account_following(mastodon.me()["id"])
-    return fetch_rest(first_page)
+    return fetch_pages(first_page)
 
 
 def fetch_statuses(account_id, limit=40):
     first_page = mastodon.account_statuses(account_id, limit=limit)
-    return fetch_some_more(first_page)
+    return fetch_pages(first_page, limit=LIMIT)
 
 
 def create_stats_of_followings(followings):
