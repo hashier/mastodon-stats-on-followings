@@ -1,7 +1,9 @@
 import sys
 import os
+import time
 from dotenv import load_dotenv
 from mastodon import Mastodon
+from mastodon.errors import MastodonNetworkError
 import datetime
 
 load_dotenv()
@@ -10,6 +12,11 @@ INSTANCE_URL = os.getenv("MASTODON_INSTANCE_URL", "https://chaos.social")
 
 LIMIT = 120
 LAST_N_DAYS = 14
+
+# Library default is 300s, which hangs for 5 minutes on a stalled connection
+REQUEST_TIMEOUT = 30
+# Waits between retries; generous enough to ride out a brief internet outage
+RETRY_WAITS = [5, 30]
 
 VERBOSE = False
 
@@ -36,6 +43,15 @@ def fetch_statuses(account_id, limit=40):
     return fetch_pages(first_page, limit=LIMIT)
 
 
+def fetch_statuses_with_retry(account_id, limit):
+    for wait in RETRY_WAITS:
+        try:
+            return fetch_statuses(account_id, limit=limit)
+        except MastodonNetworkError:
+            time.sleep(wait)
+    return fetch_statuses(account_id, limit=limit)
+
+
 def categorize_statuses(statuses, account_id):
     threshold = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(
         days=LAST_N_DAYS
@@ -58,7 +74,11 @@ def create_stats_of_followings(followings):
 
     for i, follow in enumerate(followings):
         account_id = follow["id"]
-        statuses = fetch_statuses(account_id, limit=LIMIT)
+        try:
+            statuses = fetch_statuses_with_retry(account_id, limit=LIMIT)
+        except MastodonNetworkError as e:
+            print(f"  skipping @{follow['username']}: {e}", file=sys.stderr)
+            continue
         stats[follow["username"]] = categorize_statuses(statuses, account_id)
 
         if VERBOSE:
@@ -106,6 +126,7 @@ if __name__ == "__main__":
     mastodon = Mastodon(
         access_token=os.getenv("MASTODON_ACCESS_TOKEN"),
         api_base_url=INSTANCE_URL,
+        request_timeout=REQUEST_TIMEOUT,
     )
 
     if len(sys.argv) == 1:
