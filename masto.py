@@ -1,10 +1,11 @@
-import sys
+import datetime
 import os
+import sys
 import time
+
 from dotenv import load_dotenv
 from mastodon import Mastodon
 from mastodon.errors import MastodonNetworkError
-import datetime
 
 load_dotenv()
 
